@@ -2,11 +2,11 @@
 
 This project implements a complete Structure from Motion (SfM) pipeline to reconstruct a 3D scene from a sequence of 2D images. The project is divided into phases, moving from initial feature matching and pose estimation (Phase 1) to a refined implementation using Bundle Adjustment and interactive 3D visualization (Phase 2).
 
-Project Overview
+# Project Overview
 
 The core objective is to determine the 3D structure of a scene and the trajectory of the camera simultaneously. This is achieved by tracking feature points across image frames, triangulating their 3D positions, and optimizing the results to minimize reprojection errors.
 
-Key Features:
+# Key Features:
 
 Feature Extraction: Detection and matching of keypoints across image sequences.
 Camera Pose Estimation: recovering rotation ($R$) and translation ($t$) matrices.
@@ -15,11 +15,11 @@ Bundle Adjustment: A non-linear optimization step using scipy.optimize to refine
 Sparse Jacobian Optimization: Implementation of a sparsity matrix to make Bundle Adjustment computationally feasible for large datasets.
 Interactive Visualization: 3D rendering of the point cloud and camera frustums using Open3D.
 
-Code Structure & Pipeline
+# Code Structure & Pipeline
 
 The project logic is encapsulated primarily in CV-Project-Phase2-ver2.ipynb. Below is the detailed breakdown of the internal code architecture:
 
-1. Dependencies and Setup
+## 1. Dependencies and Setup
 
 The notebook relies on standard Computer Vision and scientific computing libraries:
 
@@ -35,7 +35,7 @@ matplotlib: For 2D plotting and initial debug views.
 
 open3d: For high-fidelity 3D visualization and the "Virtual Tour".
 
-2. Phase 1: Initialization & Helper Functions
+## 2. Phase 1: Initialization & Helper Functions
 
 This section contains the building blocks for the reconstruction:
 
@@ -45,7 +45,7 @@ Outlier Rejection: Usage of RANSAC (Random Sample Consensus) to remove bad match
 
 Pose Retrieval: Extracting the initial Rotation ($R$) and Translation ($t$) from the Essential Matrix.
 
-3. Phase 2: Bundle Adjustment (Optimization)
+## 3. Phase 2: Bundle Adjustment (Optimization)
 
 This is the core of the project. Simply triangulating points leads to "drift" and error accumulation. Bundle Adjustment refines estimates by minimizing the reprojection error.
 
@@ -63,7 +63,7 @@ Because the interaction matrix (Jacobian) is extremely large but mostly empty (a
 
 This significantly speeds up the least_squares solver by indicating exactly which parameters affect which residuals.
 
-4. 3D Visualization (The Virtual Tour)
+## 4. 3D Visualization (The Virtual Tour)
 
 The final section handles the rendering of the reconstructed scene.
 
@@ -73,31 +73,27 @@ Camera Frustums: The code iterates through the solved camera poses and draws 3D 
 
 Rendering: Uses o3d.visualization.draw to render the interactive scene.
 
-Note: The code includes try-except blocks to handle rendering contexts, ensuring it works in different environments (e.g., enabling WebRTC for remote notebooks).
+### Note: The code includes try-except blocks to handle rendering contexts, ensuring it works in different environments (e.g., enabling WebRTC for remote notebooks).
 
-🚀 How to Run
-
-Clone the Repository:
+# Setup
 
 git clone <repository_url>
 cd <repository_folder>
 
-
-Install Requirements:
+## Install Requirements:
 It is recommended to use a virtual environment.
 pip install numpy opencv-python matplotlib scipy open3d
 
 
-Data Preparation:
+## Data Preparation:
 Ensure your image dataset is placed in the correct directory as referenced in the "Imports" or "Data Loading" section of the notebook.
 
-Execute the Notebook:
+## Execute the Notebook:
 Launch Jupyter and run the cells sequentially.
 
 jupyter notebook CV-Project-Phase2-ver2.ipynb
 
-
-Results:
+# Results:
 The output of the notebook will include:
 2D Feature Matches: Visualizations of keypoints matched between frames.
 Optimization Logs: Output from scipy.optimize showing the reduction in cost (residual error) after Bundle Adjustment.
@@ -105,7 +101,7 @@ Interactive 3D Window: An Open3D window displaying:
 Blue points: The reconstructed 3D structure.
 Camera Axes: Representing the trajectory and orientation of the camera during the virtual tour.
 
-🛠 Tech Stack
+# 🛠 Tech Stack \n
 OpenCV
 Core Logic: Structure from Motion (SfM)
 Optimization: Levenberg-Marquardt (via SciPy)
