@@ -78,6 +78,7 @@ Rendering: Uses o3d.visualization.draw to render the interactive scene.
 # Setup
 
 git clone https://github.com/arslanamjad19/MSfM-3D-Scene-Reconstruction.git
+
 cd MSfM-3D-Scene-Reconstruction
 
 ## Install Requirements:
@@ -101,7 +102,8 @@ Interactive 3D Window: An Open3D window displaying:
 Blue points: The reconstructed 3D structure.
 Camera Axes: Representing the trajectory and orientation of the camera during the virtual tour.
 
-# 🛠 Tech Stack \n
+# 🛠 Tech Stack
+
 OpenCV
 Core Logic: Structure from Motion (SfM)
 Optimization: Levenberg-Marquardt (via SciPy)
