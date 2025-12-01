@@ -77,11 +77,11 @@ Rendering: Uses o3d.visualization.draw to render the interactive scene.
 
 # Setup
 
-git clone <repository_url>
-cd <repository_folder>
+git clone https://github.com/arslanamjad19/MSfM-3D-Scene-Reconstruction.git
+cd MSfM-3D-Scene-Reconstruction
 
 ## Install Requirements:
-It is recommended to use a virtual environment.
+It is recommended to use a virtual environment or conda environment
 pip install numpy opencv-python matplotlib scipy open3d
 
 
