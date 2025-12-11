@@ -1,110 +1,226 @@
 # MSfM-3D-Scene-Reconstruction
 
-This project implements a complete Structure from Motion (SfM) pipeline to reconstruct a 3D scene from a sequence of 2D images. The project is divided into phases, moving from initial feature matching and pose estimation (Phase 1) to a refined implementation using Bundle Adjustment and interactive 3D visualization (Phase 2).
+A complete **Structure from Motion (SfM)** pipeline that reconstructs 3D scenes from 2D image sequences, featuring multi-view reconstruction merging and an interactive web-based virtual tour viewer.
 
-# Project Overview
+## Project Overview
 
-The core objective is to determine the 3D structure of a scene and the trajectory of the camera simultaneously. This is achieved by tracking feature points across image frames, triangulating their 3D positions, and optimizing the results to minimize reprojection errors.
+This project implements a full SfM pipeline that:
+- Extracts and matches features across image sequences
+- Estimates camera poses using PnP and RANSAC
+- Triangulates 3D points from 2D correspondences
+- Refines reconstructions using Bundle Adjustment with sparse Jacobian optimization
+- Merges multiple partial reconstructions using interactive point cloud alignment
+- Provides an immersive Photosynth-style web viewer for exploring reconstructed scenes
 
-# Key Features:
+## Key Features
 
-Feature Extraction: Detection and matching of keypoints across image sequences.
-Camera Pose Estimation: recovering rotation ($R$) and translation ($t$) matrices.
-Triangulation: Converting 2D image points into a 3D Point Cloud.
-Bundle Adjustment: A non-linear optimization step using scipy.optimize to refine camera poses and 3D point coordinates simultaneously.
-Sparse Jacobian Optimization: Implementation of a sparsity matrix to make Bundle Adjustment computationally feasible for large datasets.
-Interactive Visualization: 3D rendering of the point cloud and camera frustums using Open3D.
+### Phase 1 & 2: Core Reconstruction
+- **Feature Detection**: SIFT/ORB keypoint extraction and matching with Lowe's ratio test
+- **Robust Pose Estimation**: Essential matrix decomposition with RANSAC outlier rejection
+- **Sequential SfM**: Incremental reconstruction using PnP with multiple reference frames
+- **Smart Triangulation**: Parallax-based point filtering with reprojection error validation
+- **Bundle Adjustment**: Sparse Jacobian optimization using `scipy.optimize.least_squares`
+- **Quality Filtering**: Automatic outlier removal based on reprojection errors and 3D spatial distribution
 
-# Code Structure & Pipeline
+### Phase 3: Reconstruction Merging & Visualization
+- **Interactive Alignment**: Manual point correspondence selection using Open3D
+- **Similarity Transform**: Umeyama's method for scale-rotation-translation estimation
+- **Multi-View Merging**: Combine multiple partial reconstructions into unified scene
+- **Web Viewer**: Three.js-based interactive tour with:
+  - Smooth camera transitions with lerp/slerp interpolation
+  - View graph navigation (click to jump to best neighbor)
+  - Cross-fading image transitions
+  - Point cloud visibility toggle
+  - Full-screen image display
 
-The project logic is encapsulated primarily in CV-Project-Phase2-ver2.ipynb. Below is the detailed breakdown of the internal code architecture:
+## 🛠️ Tech Stack
 
-## 1. Dependencies and Setup
+- **OpenCV** - Feature detection, matching, and camera calibration
+- **NumPy** - Linear algebra and matrix operations
+- **SciPy** - Bundle Adjustment optimization with sparse matrices
+- **Open3D** - Point cloud visualization and interactive alignment
+- **Three.js** - Web-based 3D rendering
+- **Matplotlib** - Data visualization and debugging
 
-The notebook relies on standard Computer Vision and scientific computing libraries:
+## Setup Instructions
 
-cv2 (OpenCV): For image processing and feature handling.
+### Prerequisites
+- Python 3.9 or higher
+- Git
 
-numpy: For linear algebra and matrix operations.
+### Installation
 
-scipy.optimize: specifically least_squares for the Bundle Adjustment minimization.
-
-scipy.sparse: For constructing the Jacobian sparsity pattern.
-
-matplotlib: For 2D plotting and initial debug views.
-
-open3d: For high-fidelity 3D visualization and the "Virtual Tour".
-
-## 2. Phase 1: Initialization & Helper Functions
-
-This section contains the building blocks for the reconstruction:
-
-Feature Matching: Functions to detect SIFT/ORB features and match them between adjacent frames using FLANN or BruteForce matchers.
-
-Outlier Rejection: Usage of RANSAC (Random Sample Consensus) to remove bad matches during Fundamental/Essential matrix estimation.
-
-Pose Retrieval: Extracting the initial Rotation ($R$) and Translation ($t$) from the Essential Matrix.
-
-## 3. Phase 2: Bundle Adjustment (Optimization)
-
-This is the core of the project. Simply triangulating points leads to "drift" and error accumulation. Bundle Adjustment refines estimates by minimizing the reprojection error.
-
-Parameter Vectorization: The code flattens all parameters (camera extrinsic parameters and 3D point coordinates) into a single 1D array required by the optimizer.
-
-Reprojection Error Function (fun):
-
-Projects the estimated 3D points back onto the 2D image planes using the current camera parameters.
-
-Calculates the residual (difference) between observed 2D points and projected points.
-
-Bundle Adjustment Sparsity (bundle_adjustment_sparsity):
-
-Because the interaction matrix (Jacobian) is extremely large but mostly empty (a 3D point is only seen by a few cameras), a Sparse Matrix (scipy.sparse.lil_matrix) is constructed.
-
-This significantly speeds up the least_squares solver by indicating exactly which parameters affect which residuals.
-
-## 4. 3D Visualization (The Virtual Tour)
-
-The final section handles the rendering of the reconstructed scene.
-
-Point Cloud Generation: The optimized 3D points ($X, Y, Z$) are converted into an Open3D PointCloud object.
-
-Camera Frustums: The code iterates through the solved camera poses and draws 3D axes/frustums to represent the camera's path through the scene.
-
-Rendering: Uses o3d.visualization.draw to render the interactive scene.
-
-### Note: The code includes try-except blocks to handle rendering contexts, ensuring it works in different environments (e.g., enabling WebRTC for remote notebooks).
-
-# Setup
-
+1. **Clone the repository**
+```bash
 git clone https://github.com/arslanamjad19/MSfM-3D-Scene-Reconstruction.git
-
 cd MSfM-3D-Scene-Reconstruction
+```
 
-## Install Requirements:
-It is recommended to use a virtual environment or conda environment
+2. **Create a virtual environment (recommended)**
+```bash
+# Using venv
+python -m venv sfm_env
+source sfm_env/bin/activate  # On Windows: sfm_env\Scripts\activate
+
+# OR using conda
+conda create -n sfm_env python=3.9
+conda activate sfm_env
+```
+
+3. **Install dependencies**
+```bash
 pip install numpy opencv-python matplotlib scipy open3d
+```
 
+### Prepare Your Data
 
-## Data Preparation:
-Ensure your image dataset is placed in the correct directory as referenced in the "Imports" or "Data Loading" section of the notebook.
+Place your image sequence in the `Images/test_set/` directory:
+```
+Images/test_set/
+├── Img1.jpg
+├── Img2.jpg
+├── Img3.jpg
+└── ...
+```
 
-## Execute the Notebook:
-Launch Jupyter and run the cells sequentially.
+**Image Requirements:**
+- Sequential overlapping views of the scene
+- Consistent naming convention: `Img{N}.jpg` (or .jpeg, .png)
+- Sufficient overlap between adjacent frames (>30%)
+- Good lighting and texture for feature matching
 
-jupyter notebook CV-Project-Phase2-ver2.ipynb
+## 📊 Usage
 
-# Results:
-The output of the notebook will include:
-2D Feature Matches: Visualizations of keypoints matched between frames.
-Optimization Logs: Output from scipy.optimize showing the reduction in cost (residual error) after Bundle Adjustment.
-Interactive 3D Window: An Open3D window displaying:
-Blue points: The reconstructed 3D structure.
-Camera Axes: Representing the trajectory and orientation of the camera during the virtual tour.
+### Phase 2: Single Reconstruction
 
-# 🛠 Tech Stack
+1. **Configure parameters in `phase2.py`:**
+```python
+folder = "Images/test_set"      # Input image directory
+indices = list(range(1, 34))     # Image indices (Img1 to Img33)
+algo = "SIFT"                    # Feature detector: "SIFT" or "ORB"
+output_dir = "Ply_pose1_DLC"     # Output directory name
+```
 
-OpenCV
-Core Logic: Structure from Motion (SfM)
-Optimization: Levenberg-Marquardt (via SciPy)
-Visualization: Open3D
+2. **Run the reconstruction:**
+```bash
+python phase2.py
+```
+
+3. **Outputs:**
+   - `sequence_12views_sparse_raw.ply` - Raw 3D point cloud
+   - `sequence_12views_sparse_filtered.ply` - Filtered point cloud
+   - `cameras.json` - Camera poses and parameters
+   - `points.json` - Point cloud for web viewer
+   - `view_graph.json` - Camera connectivity graph
+   - `index.html` - Interactive web viewer
+
+### Phase 3: Merge Multiple Reconstructions
+
+If you have multiple partial reconstructions (e.g., different walls of a room):
+
+1. **Run reconstructions separately:**
+```bash
+# Edit phase2.py: set output_dir = "Ply_pose1_DLC"
+python phase2.py
+
+# Edit phase2.py: set output_dir = "Ply_pose2_DLC" (with different images)
+python phase2.py
+```
+
+2. **Merge using interactive alignment:**
+```bash
+python phase3_merge_complete.py
+```
+
+**Merging Instructions:**
+- The script will open two Open3D windows sequentially
+- In each window, **Shift + Left Click** to pick corresponding landmark points
+- Pick **4-6 clearly identifiable points** in the **same order** in both clouds
+- Common landmarks work best (corners, edges, distinctive features)
+- Press **Q** when done with each window
+- The script automatically computes and applies the transformation
+
+3. **Result:** Merged reconstruction in `Ply_merged_DLC/`
+
+### View Results
+
+**Option 1: Open3D Viewer (automatic)**
+- Automatically opens during `phase2.py` execution
+- Shows point cloud and camera frustums
+
+**Option 2: Web Viewer (recommended)**
+```bash
+cd Ply_pose1_DLC  # or Ply_merged_DLC
+python -m http.server 8000
+```
+Then open: `http://localhost:8000/index.html`
+
+**Web Viewer Controls:**
+- **Click** on view to navigate to best neighbor camera
+- **Next/Prev** buttons for sequential navigation
+- **Show point cloud** checkbox to toggle visibility
+- **Reset** button to return to first camera
+
+## 🔧 Tuning Parameters
+
+Key parameters in `phase2.py`:
+
+### Feature Matching
+```python
+algo = "SIFT"              # "SIFT" (accurate) or "ORB" (faster)
+target_w = 3000            # Resize width for processing
+```
+
+### PnP Thresholds
+```python
+min_pnp_pts = 20           # Minimum 3D-2D correspondences
+min_pnp_inliers = 60       # Minimum inliers to accept pose
+pnp_reproj_err_px = 2.0    # RANSAC reprojection threshold
+```
+
+### Triangulation Quality
+```python
+triang_E_thresh_px = 1.5        # Essential matrix RANSAC threshold
+triang_reproj_thresh_px = 2.0   # Max reprojection error for new points
+triang_min_parallax_deg = 2.0   # Minimum parallax angle
+```
+
+### Bundle Adjustment
+```python
+MAX_POINTS = 3000          # Max points for BA (performance vs accuracy)
+```
+
+## 📈 Pipeline Details
+
+### 1. Initialization (Bootstrap)
+- Match features between first two images
+- Estimate Essential matrix with RANSAC
+- Decompose to 4 possible [R|t] solutions
+- Select pose using cheirality test (points in front of both cameras)
+
+### 2. Sequential Camera Addition
+- For each new image:
+  - Match against previously posed cameras
+  - Build 3D-2D correspondences from existing map
+  - Estimate pose using PnP RANSAC
+  - Triangulate new points with quality checks
+  - Fall back to earlier reference frames if needed
+
+### 3. Bundle Adjustment
+- Simultaneously optimize all camera poses and 3D points
+- Minimize reprojection error: `Σ ||projected(X_i) - observed(x_i)||²`
+- Uses sparse Jacobian for efficiency (most derivatives are zero)
+- Huber loss for robustness to outliers
+
+### 4. Post-Processing
+- Filter points by reprojection error (median ≤ 2.0 px)
+- Require points visible in ≥2 views
+- Remove 3D spatial outliers (>97th percentile distance from median)
+
+## 📝 Output Files Explained
+
+- **`.ply` files**: Standard point cloud format (open with MeshLab/CloudCompare)
+- **`cameras.json`**: Camera positions, orientations (quaternions), and extrinsics
+- **`points.json`**: Flat array of 3D coordinates for web rendering
+- **`view_graph.json`**: Connectivity between cameras (shared visible points)
+- **`index.html`**: Self-contained web viewer (requires local server)
